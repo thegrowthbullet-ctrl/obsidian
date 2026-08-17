@@ -26,20 +26,22 @@
 .dwt-weekdays {
 	display: grid;
 	grid-template-columns: repeat(7, 1fr);
-	gap: 4px;
-	margin-bottom: 4px;
+	gap: 2px;
+	margin-bottom: 2px;
+	width: 50%;
 }
 
 .dwt-weekday {
 	text-align: center;
-	font-size: 0.75em;
+	font-size: 0.65em;
 	color: var(--text-muted);
 	font-weight: 600;
 }
 
 .dwt-grid {
 	display: grid;
-	gap: 4px;
+	gap: 2px;
+	width: 50%;
 }
 
 .dwt-grid-week {
@@ -68,9 +70,9 @@
 
 .dwt-cell {
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 6px;
-	padding: 6px;
-	min-height: 64px;
+	border-radius: 4px;
+	padding: 3px;
+	min-height: 32px;
 	cursor: pointer;
 	background: var(--background-primary);
 	transition: background 0.15s ease;
@@ -88,8 +90,12 @@
 }
 
 .dwt-cell-ticked {
-	background: var(--background-modifier-success);
-	border-color: var(--color-green);
+	background: #67a2a1;
+	border-color: #5a9190;
+}
+
+.dwt-cell-ticked:hover {
+	background: #5a9190;
 }
 
 .dwt-cell-top {

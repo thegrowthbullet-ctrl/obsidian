@@ -26,11 +26,12 @@ export function parseDateKey(dateKey: string): Date | null {
 	return new Date(year, month - 1, day);
 }
 
-/** Week starts on Sunday (matches 日一二三四五六 header). */
+/** Week starts on Monday. */
 export function startOfWeek(date: Date): Date {
 	const d = new Date(date);
 	const weekday = d.getDay();
-	d.setDate(d.getDate() - weekday);
+	const daysFromMonday = weekday === 0 ? 6 : weekday - 1;
+	d.setDate(d.getDate() - daysFromMonday);
 	d.setHours(0, 0, 0, 0);
 	return d;
 }

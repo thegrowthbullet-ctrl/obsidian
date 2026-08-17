@@ -11,7 +11,7 @@ import { parseFolderList } from './folderFilter';
 
 export const VIEW_TYPE_DAILY_TRACKER = 'daily-word-tracker';
 
-const WEEKDAY_LABELS = ['日', '一', '二', '三', '四', '五', '六'];
+const WEEKDAY_LABELS = ['一', '二', '三', '四', '五', '六', '日'];
 
 export class DailyTrackerView extends ItemView {
 	plugin: MyPlugin;
