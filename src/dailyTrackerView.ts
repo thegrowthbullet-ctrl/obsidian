@@ -76,12 +76,14 @@ export class DailyTrackerView extends ItemView {
 			this.changeWeek(1);
 		});
 
-		const weekdayRow = container.createDiv({ cls: 'dwt-weekdays' });
+		const calendar = container.createDiv({ cls: 'dwt-calendar' });
+
+		const weekdayRow = calendar.createDiv({ cls: 'dwt-weekdays' });
 		for (const label of WEEKDAY_LABELS) {
 			weekdayRow.createDiv({ text: label, cls: 'dwt-weekday' });
 		}
 
-		const grid = container.createDiv({ cls: 'dwt-grid dwt-grid-week' });
+		const grid = calendar.createDiv({ cls: 'dwt-grid dwt-grid-week' });
 		this.buildWeekGrid(grid, trackingStart);
 
 		const scoreboard = container.createDiv({ cls: 'dwt-scoreboard' });
