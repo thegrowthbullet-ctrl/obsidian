@@ -1,5 +1,10 @@
-import { App } from 'obsidian';
+import { App, MarkdownView } from 'obsidian';
 import { matchesFolderFilter } from './folderFilter';
+import {
+	endOfDay,
+	formatDateKey,
+	startOfDay,
+} from './dateUtils';
 
 /** Count writing units: each CJK character + each English word. */
 export function countWords(text: string): number {
@@ -22,25 +27,6 @@ export function countWords(text: string): number {
 		.filter((w) => w.length > 0 && /[a-zA-Z0-9]/.test(w)).length;
 
 	return cjk + english;
-}
-
-export function startOfDay(date: Date): number {
-	const d = new Date(date);
-	d.setHours(0, 0, 0, 0);
-	return d.getTime();
-}
-
-export function endOfDay(date: Date): number {
-	const d = new Date(date);
-	d.setHours(23, 59, 59, 999);
-	return d.getTime();
-}
-
-export function formatDateKey(date: Date): string {
-	const y = date.getFullYear();
-	const m = String(date.getMonth() + 1).padStart(2, '0');
-	const day = String(date.getDate()).padStart(2, '0');
-	return `${y}-${m}-${day}`;
 }
 
 export async function countWordsForDay(
@@ -70,3 +56,38 @@ export async function countWordsForDay(
 
 	return total;
 }
+
+/** Count today's words, using live editor content when the active note is open. */
+export async function countWordsForTodayLive(
+	app: App,
+	includeFolders: string[],
+	excludeFolders: string[],
+): Promise<number> {
+	const today = new Date();
+	const dayStart = startOfDay(today);
+	const dayEnd = endOfDay(today);
+	let total = await countWordsForDay(app, today, includeFolders, excludeFolders);
+
+	const activeFile = app.workspace.getActiveFile();
+	if (!activeFile?.path.endsWith('.md')) return total;
+	if (!matchesFolderFilter(activeFile.path, includeFolders, excludeFolders)) {
+		return total;
+	}
+
+	const view = app.workspace.getActiveViewOfType(MarkdownView);
+	if (!view || view.file !== activeFile) return total;
+
+	const liveWords = countWords(view.editor.getValue());
+	const stat = await app.vault.adapter.stat(activeFile.path);
+	const alreadyCountedToday =
+		stat && stat.mtime >= dayStart && stat.mtime <= dayEnd;
+
+	if (alreadyCountedToday) {
+		const savedContent = await app.vault.cachedRead(activeFile);
+		total -= countWords(savedContent);
+	}
+
+	return total + liveWords;
+}
+
+export { formatDateKey } from './dateUtils';

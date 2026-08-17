@@ -4,11 +4,14 @@ import MyPlugin from './main';
 export interface MyPluginSettings {
 	includeFolders: string;
 	excludeFolders: string;
+	/** YYYY-MM-DD of Sunday when tracking started (first plugin load). */
+	trackingWeekStart: string;
 }
 
 export const DEFAULT_SETTINGS: MyPluginSettings = {
 	includeFolders: '',
 	excludeFolders: '',
+	trackingWeekStart: '',
 };
 
 export class SampleSettingTab extends PluginSettingTab {
@@ -23,6 +26,15 @@ export class SampleSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 
 		containerEl.empty();
+
+		containerEl.createEl('h3', { text: '追蹤範圍' });
+		const trackingStart = this.plugin.settings.trackingWeekStart;
+		containerEl.createEl('p', {
+			text: trackingStart
+				? `追蹤由 ${trackingStart} 所在星期開始（首次啟用插件時自動設定）。`
+				: '首次啟用後會自動從當週開始追蹤。',
+			cls: 'setting-item-description',
+		});
 
 		containerEl.createEl('h3', { text: '資料夾篩選' });
 		containerEl.createEl('p', {

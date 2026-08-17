@@ -1,15 +1,21 @@
-import { Plugin, WorkspaceLeaf } from 'obsidian';
+import { Plugin, TFile, WorkspaceLeaf } from 'obsidian';
 import {
 	DailyTrackerView,
 	VIEW_TYPE_DAILY_TRACKER,
 } from './dailyTrackerView';
-import { parseFolderList } from './folderFilter';
+import {
+	addDays,
+	formatDateKey,
+	parseDateKey,
+	startOfWeek,
+} from './dateUtils';
+import { parseFolderList, matchesFolderFilter } from './folderFilter';
 import {
 	DEFAULT_SETTINGS,
 	MyPluginSettings,
 	SampleSettingTab,
 } from './settings';
-import { countWordsForDay, formatDateKey } from './wordCount';
+import { countWordsForDay, countWordsForTodayLive } from './wordCount';
 
 export interface DayRecord {
 	ticked: boolean;
@@ -24,9 +30,12 @@ interface PluginPersistedData {
 export default class MyPlugin extends Plugin {
 	settings!: MyPluginSettings;
 	dayRecords: Record<string, DayRecord> = {};
+	private updateDebounce: ReturnType<typeof setTimeout> | null = null;
+	private isUpdatingToday = false;
 
 	async onload() {
 		await this.loadSettings();
+		this.ensureTrackingStarted();
 
 		this.registerView(
 			VIEW_TYPE_DAILY_TRACKER,
@@ -46,15 +55,66 @@ export default class MyPlugin extends Plugin {
 		});
 
 		this.addSettingTab(new SampleSettingTab(this.app, this));
+
+		this.registerEvent(
+			this.app.vault.on('modify', (file) => {
+				if (file instanceof TFile) this.handleVaultChange(file);
+			}),
+		);
+		this.registerEvent(
+			this.app.vault.on('create', (file) => {
+				if (file instanceof TFile) this.handleVaultChange(file);
+			}),
+		);
+		this.registerEvent(
+			this.app.vault.on('delete', () => {
+				this.scheduleTodayUpdate();
+			}),
+		);
+		this.registerEvent(
+			this.app.workspace.on('editor-change', () => {
+				this.scheduleTodayUpdate();
+			}),
+		);
+
+		await this.updateTodayRecord();
 	}
 
 	onunload() {
+		if (this.updateDebounce) clearTimeout(this.updateDebounce);
 		this.app.workspace
 			.getLeavesOfType(VIEW_TYPE_DAILY_TRACKER)
 			.forEach((leaf) => leaf.detach());
 	}
 
+	ensureTrackingStarted(): void {
+		if (this.settings.trackingWeekStart) return;
+
+		const weekStart = startOfWeek(new Date());
+		this.settings.trackingWeekStart = formatDateKey(weekStart);
+		this.saveAllData();
+	}
+
+	getTrackingWeekStart(): Date {
+		const parsed = parseDateKey(this.settings.trackingWeekStart);
+		if (parsed) return parsed;
+		return startOfWeek(new Date());
+	}
+
+	isWithinTrackingPeriod(date: Date): boolean {
+		return date.getTime() >= this.getTrackingWeekStart().getTime();
+	}
+
+	handleVaultChange(file: TFile): void {
+		if (!file.path.endsWith('.md')) return;
+		const include = parseFolderList(this.settings.includeFolders);
+		const exclude = parseFolderList(this.settings.excludeFolders);
+		if (!matchesFolderFilter(file.path, include, exclude)) return;
+		this.scheduleTodayUpdate();
+	}
+
 	async activateTrackerView(): Promise<void> {
+		this.ensureTrackingStarted();
 		const { workspace } = this.app;
 		let leaf = workspace.getLeavesOfType(VIEW_TYPE_DAILY_TRACKER)[0];
 
@@ -82,26 +142,83 @@ export default class MyPlugin extends Plugin {
 		await this.saveAllData();
 	}
 
-	async recalculateAllTickedDays(): Promise<void> {
-		const include = parseFolderList(this.settings.includeFolders);
-		const exclude = parseFolderList(this.settings.excludeFolders);
+	scheduleTodayUpdate(): void {
+		if (this.updateDebounce) clearTimeout(this.updateDebounce);
+		this.updateDebounce = setTimeout(() => {
+			this.updateTodayRecord();
+		}, 400);
+	}
 
-		for (const [dateKey, record] of Object.entries(this.dayRecords)) {
-			if (!record.ticked) continue;
+	async updateTodayRecord(): Promise<void> {
+		if (this.isUpdatingToday) return;
+		this.isUpdatingToday = true;
 
-			const parts = dateKey.split('-').map(Number);
-			const year = parts[0];
-			const month = parts[1];
-			const day = parts[2];
-			if (!year || !month || !day) continue;
+		try {
+			const today = new Date();
+			if (!this.isWithinTrackingPeriod(today)) return;
 
-			const date = new Date(year, month - 1, day);
-			record.wordCount = await countWordsForDay(
+			const dateKey = formatDateKey(today);
+			const include = parseFolderList(this.settings.includeFolders);
+			const exclude = parseFolderList(this.settings.excludeFolders);
+			const words = await countWordsForTodayLive(
 				this.app,
-				date,
 				include,
 				exclude,
 			);
+
+			const record = this.getDayRecord(dateKey);
+			const ticked = words > 0;
+			if (record.ticked === ticked && record.wordCount === words) return;
+
+			await this.setDayRecord(dateKey, { ticked, wordCount: words });
+			this.refreshTrackerViews();
+		} finally {
+			this.isUpdatingToday = false;
+		}
+	}
+
+	async updateDayRecord(date: Date): Promise<void> {
+		if (!this.isWithinTrackingPeriod(date)) return;
+
+		const dateKey = formatDateKey(date);
+		const include = parseFolderList(this.settings.includeFolders);
+		const exclude = parseFolderList(this.settings.excludeFolders);
+		const todayKey = formatDateKey(new Date());
+		const words =
+			dateKey === todayKey
+				? await countWordsForTodayLive(this.app, include, exclude)
+				: await countWordsForDay(this.app, date, include, exclude);
+
+		const ticked = words > 0;
+		await this.setDayRecord(dateKey, { ticked, wordCount: words });
+	}
+
+	async recalculateAllTickedDays(): Promise<void> {
+		const include = parseFolderList(this.settings.includeFolders);
+		const exclude = parseFolderList(this.settings.excludeFolders);
+		const trackingStart = this.getTrackingWeekStart();
+		const today = new Date();
+
+		for (
+			let cursor = new Date(trackingStart);
+			cursor.getTime() <= today.getTime();
+			cursor = addDays(cursor, 1)
+		) {
+			const dateKey = formatDateKey(cursor);
+			const record = this.getDayRecord(dateKey);
+			const words =
+				dateKey === formatDateKey(today)
+					? await countWordsForTodayLive(this.app, include, exclude)
+					: await countWordsForDay(
+							this.app,
+							cursor,
+							include,
+							exclude,
+						);
+
+			record.ticked = words > 0;
+			record.wordCount = words;
+			this.dayRecords[dateKey] = record;
 		}
 
 		await this.saveAllData();
@@ -109,14 +226,14 @@ export default class MyPlugin extends Plugin {
 	}
 
 	refreshTrackerViews(): void {
-		this.app.workspace.getLeavesOfType(VIEW_TYPE_DAILY_TRACKER).forEach(
-			(leaf) => {
+		this.app.workspace
+			.getLeavesOfType(VIEW_TYPE_DAILY_TRACKER)
+			.forEach((leaf) => {
 				const view = leaf.view;
 				if (view instanceof DailyTrackerView) {
 					view.render();
 				}
-			},
-		);
+			});
 	}
 
 	async loadSettings() {

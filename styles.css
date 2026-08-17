@@ -39,8 +39,38 @@
 
 .dwt-grid {
 	display: grid;
-	grid-template-columns: repeat(7, 1fr);
 	gap: 4px;
+}
+
+.dwt-grid-week {
+	grid-template-columns: repeat(7, 1fr);
+}
+
+.dwt-nav-btn-disabled {
+	opacity: 0.35;
+	cursor: not-allowed;
+}
+
+.dwt-cell-disabled {
+	opacity: 0.45;
+	cursor: default;
+	background: var(--background-secondary);
+}
+
+.dwt-cell-disabled:hover {
+	background: var(--background-secondary);
+}
+
+.dwt-cell-today {
+	border-color: var(--color-accent);
+	box-shadow: 0 0 0 1px var(--color-accent);
+}
+
+.dwt-tracking-note {
+	font-size: 0.8em;
+	color: var(--text-muted);
+	margin-bottom: 10px;
+	line-height: 1.4;
 }
 
 .dwt-cell {

@@ -1,10 +1,14 @@
 import { ItemView, WorkspaceLeaf } from 'obsidian';
 import MyPlugin from './main';
-import { parseFolderList } from './folderFilter';
 import {
-	countWordsForDay,
+	addDays,
 	formatDateKey,
-} from './wordCount';
+	formatWeekRange,
+	isBeforeDay,
+	parseDateKey,
+	startOfWeek,
+} from './dateUtils';
+import { parseFolderList } from './folderFilter';
 
 export const VIEW_TYPE_DAILY_TRACKER = 'daily-word-tracker';
 
@@ -12,15 +16,12 @@ const WEEKDAY_LABELS = ['日', '一', '二', '三', '四', '五', '六'];
 
 export class DailyTrackerView extends ItemView {
 	plugin: MyPlugin;
-	displayYear: number;
-	displayMonth: number;
+	displayWeekStart: Date;
 
 	constructor(leaf: WorkspaceLeaf, plugin: MyPlugin) {
 		super(leaf);
 		this.plugin = plugin;
-		const now = new Date();
-		this.displayYear = now.getFullYear();
-		this.displayMonth = now.getMonth();
+		this.displayWeekStart = startOfWeek(new Date());
 	}
 
 	getViewType(): string {
@@ -36,6 +37,7 @@ export class DailyTrackerView extends ItemView {
 	}
 
 	async onOpen(): Promise<void> {
+		this.plugin.ensureTrackingStarted();
 		await this.render();
 	}
 
@@ -48,107 +50,101 @@ export class DailyTrackerView extends ItemView {
 		container.empty();
 		container.addClass('daily-word-tracker-root');
 
+		const trackingStart = this.plugin.getTrackingWeekStart();
+		const canGoPrev = isBeforeDay(trackingStart, this.displayWeekStart);
+
 		const header = container.createDiv({ cls: 'dwt-header' });
 		const prevBtn = header.createEl('button', {
 			text: '◀',
 			cls: 'dwt-nav-btn',
 		});
-		const title = header.createEl('h2', {
-			cls: 'dwt-title',
-		});
-		title.setText(`${this.displayYear} 年 ${this.displayMonth + 1} 月`);
+		prevBtn.disabled = !canGoPrev;
+		if (!canGoPrev) prevBtn.addClass('dwt-nav-btn-disabled');
+
+		const title = header.createEl('h2', { cls: 'dwt-title' });
+		title.setText(formatWeekRange(this.displayWeekStart));
+
 		const nextBtn = header.createEl('button', {
 			text: '▶',
 			cls: 'dwt-nav-btn',
 		});
 
 		prevBtn.addEventListener('click', () => {
-			this.changeMonth(-1);
+			if (!canGoPrev) return;
+			this.changeWeek(-1);
 		});
 		nextBtn.addEventListener('click', () => {
-			this.changeMonth(1);
+			this.changeWeek(1);
 		});
+
+		const trackingNote = container.createDiv({ cls: 'dwt-tracking-note' });
+		const trackingKey = this.plugin.settings.trackingWeekStart;
+		const trackingDate = trackingKey ? parseDateKey(trackingKey) : null;
+		if (trackingDate) {
+			trackingNote.setText(
+				`追蹤由 ${formatWeekRange(trackingDate)} 開始 · 有打字會自動剔選並更新字數`,
+			);
+		}
 
 		const weekdayRow = container.createDiv({ cls: 'dwt-weekdays' });
 		for (const label of WEEKDAY_LABELS) {
 			weekdayRow.createDiv({ text: label, cls: 'dwt-weekday' });
 		}
 
-		const grid = container.createDiv({ cls: 'dwt-grid' });
-		this.buildMonthGrid(grid);
+		const grid = container.createDiv({ cls: 'dwt-grid dwt-grid-week' });
+		this.buildWeekGrid(grid, trackingStart);
 
 		const scoreboard = container.createDiv({ cls: 'dwt-scoreboard' });
-		this.buildScoreboard(scoreboard);
+		this.buildScoreboard(scoreboard, trackingStart);
 	}
 
-	changeMonth(delta: number): void {
-		this.displayMonth += delta;
-		if (this.displayMonth < 0) {
-			this.displayMonth = 11;
-			this.displayYear -= 1;
-		} else if (this.displayMonth > 11) {
-			this.displayMonth = 0;
-			this.displayYear += 1;
-		}
+	changeWeek(delta: number): void {
+		const next = addDays(this.displayWeekStart, delta * 7);
+		const trackingStart = this.plugin.getTrackingWeekStart();
+		if (isBeforeDay(next, trackingStart) && delta < 0) return;
+		this.displayWeekStart = next;
 		this.render();
 	}
 
-	buildMonthGrid(gridEl: HTMLElement): void {
-		const firstDay = new Date(this.displayYear, this.displayMonth, 1);
-		const daysInMonth = new Date(
-			this.displayYear,
-			this.displayMonth + 1,
-			0,
-		).getDate();
-		const startWeekday = firstDay.getDay();
-
-		for (let i = 0; i < startWeekday; i++) {
-			gridEl.createDiv({ cls: 'dwt-cell dwt-cell-empty' });
-		}
-
-		for (let day = 1; day <= daysInMonth; day++) {
-			const date = new Date(this.displayYear, this.displayMonth, day);
+	buildWeekGrid(gridEl: HTMLElement, trackingStart: Date): void {
+		for (let i = 0; i < 7; i++) {
+			const date = addDays(this.displayWeekStart, i);
 			const dateKey = formatDateKey(date);
+			const inTracking = !isBeforeDay(date, trackingStart);
 			const record = this.plugin.getDayRecord(dateKey);
+			const isToday = dateKey === formatDateKey(new Date());
 
 			const cell = gridEl.createDiv({
-				cls: `dwt-cell${record.ticked ? ' dwt-cell-ticked' : ''}`,
+				cls: `dwt-cell${record.ticked ? ' dwt-cell-ticked' : ''}${!inTracking ? ' dwt-cell-disabled' : ''}${isToday ? ' dwt-cell-today' : ''}`,
 			});
 
 			const topRow = cell.createDiv({ cls: 'dwt-cell-top' });
-			topRow.createSpan({ text: String(day), cls: 'dwt-day-num' });
+			topRow.createSpan({
+				text: `${date.getMonth() + 1}/${date.getDate()}`,
+				cls: 'dwt-day-num',
+			});
 
 			const check = topRow.createEl('input', {
 				type: 'checkbox',
 				cls: 'dwt-checkbox',
 			});
 			check.checked = record.ticked;
+			check.disabled = !inTracking;
 
 			const countEl = cell.createDiv({ cls: 'dwt-cell-count' });
-			if (record.ticked) {
+			if (!inTracking) {
+				countEl.setText('—');
+			} else if (record.ticked) {
 				countEl.setText(this.formatCount(record.wordCount));
 			} else {
 				countEl.setText('—');
 			}
 
+			if (!inTracking) continue;
+
 			const toggle = async (): Promise<void> => {
 				if (check.checked) {
-					const include = parseFolderList(
-						this.plugin.settings.includeFolders,
-					);
-					const exclude = parseFolderList(
-						this.plugin.settings.excludeFolders,
-					);
-					const words = await countWordsForDay(
-						this.app,
-						date,
-						include,
-						exclude,
-					);
-					await this.plugin.setDayRecord(dateKey, {
-						ticked: true,
-						wordCount: words,
-					});
+					await this.plugin.updateDayRecord(date);
 				} else {
 					await this.plugin.setDayRecord(dateKey, {
 						ticked: false,
@@ -170,38 +166,36 @@ export class DailyTrackerView extends ItemView {
 		}
 	}
 
-	buildScoreboard(scoreboardEl: HTMLElement): void {
-		const daysInMonth = new Date(
-			this.displayYear,
-			this.displayMonth + 1,
-			0,
-		).getDate();
-
+	buildScoreboard(scoreboardEl: HTMLElement, trackingStart: Date): void {
+		const today = new Date();
 		let cumulative = 0;
 		let tickedDays = 0;
-		const rows: { dateKey: string; day: number; words: number }[] = [];
+		const rows: { dateKey: string; words: number }[] = [];
 
-		for (let day = 1; day <= daysInMonth; day++) {
-			const date = new Date(this.displayYear, this.displayMonth, day);
-			const dateKey = formatDateKey(date);
+		for (
+			let cursor = new Date(trackingStart);
+			!isBeforeDay(today, cursor);
+			cursor = addDays(cursor, 1)
+		) {
+			const dateKey = formatDateKey(cursor);
 			const record = this.plugin.getDayRecord(dateKey);
 			if (!record.ticked) continue;
 
 			tickedDays += 1;
 			cumulative += record.wordCount;
-			rows.push({ dateKey, day, words: record.wordCount });
+			rows.push({ dateKey, words: record.wordCount });
 		}
 
 		scoreboardEl.createEl('h3', { text: '累積 Scoreboard' });
 		scoreboardEl.createDiv({
 			cls: 'dwt-score-summary',
-			text: `本月已剔 ${tickedDays} 天 · 累積 ${this.formatCount(cumulative)} 字`,
+			text: `已寫 ${tickedDays} 天 · 累積 ${this.formatCount(cumulative)} 字`,
 		});
 
 		if (rows.length === 0) {
 			scoreboardEl.createDiv({
 				cls: 'dwt-score-empty',
-				text: '剔選日子後，會由本月第 1 格起累積計算字數。',
+				text: '開始寫字後會自動剔選，並由追蹤當週起累積計算字數。',
 			});
 			return;
 		}
