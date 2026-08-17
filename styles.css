@@ -1,5 +1,8 @@
 .daily-word-tracker-root {
-	padding: 12px 16px;
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+	padding: clamp(8px, 2vw, 16px);
 }
 
 .dwt-header {
@@ -7,32 +10,38 @@
 	align-items: center;
 	justify-content: space-between;
 	gap: 8px;
-	margin-bottom: 12px;
+	margin-bottom: clamp(8px, 2vw, 14px);
+	width: 100%;
 }
 
 .dwt-title {
 	margin: 0;
-	font-size: 1.1em;
+	font-size: clamp(0.9em, 2.5vw, 1.1em);
 	flex: 1;
 	text-align: center;
+	min-width: 0;
 }
 
 .dwt-nav-btn {
 	cursor: pointer;
 	padding: 4px 10px;
 	border-radius: 4px;
+	flex-shrink: 0;
 }
 
 .dwt-calendar {
-	width: 50%;
+	width: 100%;
+	max-width: 100%;
 	box-sizing: border-box;
+	container-type: inline-size;
+	container-name: dwt-calendar;
 }
 
 .dwt-weekdays {
 	display: grid;
 	grid-template-columns: repeat(7, minmax(0, 1fr));
-	gap: 2px;
-	margin-bottom: 2px;
+	gap: clamp(4px, 1.2cqw, 10px);
+	margin-bottom: clamp(4px, 1.2cqw, 10px);
 	width: 100%;
 }
 
@@ -41,14 +50,15 @@
 	align-items: center;
 	justify-content: center;
 	text-align: center;
-	font-size: 0.65em;
+	font-size: clamp(0.65em, 2.5cqw, 0.8em);
 	color: var(--text-muted);
 	font-weight: 600;
+	min-width: 0;
 }
 
 .dwt-grid {
 	display: grid;
-	gap: 2px;
+	gap: clamp(4px, 1.2cqw, 10px);
 	width: 100%;
 	box-sizing: border-box;
 }
@@ -80,9 +90,11 @@
 .dwt-cell {
 	box-sizing: border-box;
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 4px;
-	padding: 3px;
-	min-height: 32px;
+	border-radius: clamp(4px, 1cqw, 8px);
+	padding: clamp(4px, 1.5cqw, 8px);
+	min-width: 0;
+	min-height: clamp(36px, 12cqw, 72px);
+	aspect-ratio: 1 / 1;
 	cursor: pointer;
 	background: var(--background-primary);
 	transition: background 0.15s ease;
@@ -102,6 +114,7 @@
 	border: none;
 	cursor: default;
 	min-height: 0;
+	aspect-ratio: auto;
 }
 
 .dwt-cell-ticked {
@@ -118,28 +131,36 @@
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: 2px;
+	gap: clamp(2px, 0.8cqw, 4px);
 	width: 100%;
+	min-width: 0;
 }
 
 .dwt-day-num {
 	font-weight: 600;
-	font-size: 0.7em;
+	font-size: clamp(0.65em, 2.8cqw, 0.85em);
 	width: 100%;
 	text-align: center;
+	line-height: 1.2;
 }
 
 .dwt-checkbox {
 	cursor: pointer;
 	flex-shrink: 0;
 	margin: 0;
+	width: clamp(12px, 3.5cqw, 16px);
+	height: clamp(12px, 3.5cqw, 16px);
 }
 
 .dwt-cell-count {
-	margin-top: 3px;
-	font-size: 0.65em;
+	margin-top: clamp(2px, 0.8cqw, 4px);
+	font-size: clamp(0.6em, 2.2cqw, 0.75em);
 	color: var(--text-muted);
 	text-align: center;
+	line-height: 1.2;
+	width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .dwt-cell-ticked .dwt-cell-count {
@@ -148,18 +169,19 @@
 }
 
 .dwt-scoreboard {
-	margin-top: 20px;
-	padding-top: 16px;
+	margin-top: clamp(12px, 3vw, 20px);
+	padding-top: clamp(12px, 3vw, 16px);
 	border-top: 1px solid var(--background-modifier-border);
+	width: 100%;
 }
 
 .dwt-scoreboard h3 {
 	margin: 0 0 8px;
-	font-size: 1em;
+	font-size: clamp(0.9em, 2.5vw, 1em);
 }
 
 .dwt-score-summary {
-	font-size: 0.95em;
+	font-size: clamp(0.85em, 2.5vw, 0.95em);
 	font-weight: 600;
 	margin-bottom: 12px;
 }
@@ -172,14 +194,17 @@
 .dwt-score-table {
 	width: 100%;
 	border-collapse: collapse;
-	font-size: 0.85em;
+	font-size: clamp(0.75em, 2.2vw, 0.85em);
+	table-layout: fixed;
 }
 
 .dwt-score-table th,
 .dwt-score-table td {
-	padding: 6px 8px;
+	padding: clamp(4px, 1.5vw, 8px);
 	border-bottom: 1px solid var(--background-modifier-border);
 	text-align: left;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .dwt-score-table th {
@@ -195,4 +220,24 @@
 .dwt-score-table td:nth-child(2),
 .dwt-score-table th:nth-child(2) {
 	text-align: right;
+}
+
+/* Narrow side panels */
+@container dwt-calendar (max-width: 280px) {
+	.dwt-cell {
+		min-height: 32px;
+		aspect-ratio: auto;
+	}
+
+	.dwt-checkbox {
+		width: 12px;
+		height: 12px;
+	}
+}
+
+/* Wide panels */
+@container dwt-calendar (min-width: 480px) {
+	.dwt-cell {
+		min-height: 56px;
+	}
 }
