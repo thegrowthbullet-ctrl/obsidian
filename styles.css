@@ -107,7 +107,7 @@
 
 .dwt-day-num {
 	font-weight: 600;
-	font-size: 0.85em;
+	font-size: 0.7em;
 }
 
 .dwt-checkbox {
@@ -116,14 +116,14 @@
 }
 
 .dwt-cell-count {
-	margin-top: 6px;
-	font-size: 0.8em;
+	margin-top: 3px;
+	font-size: 0.65em;
 	color: var(--text-muted);
 	text-align: center;
 }
 
 .dwt-cell-ticked .dwt-cell-count {
-	color: var(--text-normal);
+	color: #fff;
 	font-weight: 600;
 }
 
