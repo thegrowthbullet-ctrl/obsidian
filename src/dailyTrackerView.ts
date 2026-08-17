@@ -5,7 +5,6 @@ import {
 	formatDateKey,
 	formatWeekRange,
 	isBeforeDay,
-	parseDateKey,
 	startOfWeek,
 } from './dateUtils';
 import { parseFolderList } from './folderFilter';
@@ -76,15 +75,6 @@ export class DailyTrackerView extends ItemView {
 		nextBtn.addEventListener('click', () => {
 			this.changeWeek(1);
 		});
-
-		const trackingNote = container.createDiv({ cls: 'dwt-tracking-note' });
-		const trackingKey = this.plugin.settings.trackingWeekStart;
-		const trackingDate = trackingKey ? parseDateKey(trackingKey) : null;
-		if (trackingDate) {
-			trackingNote.setText(
-				`追蹤由 ${formatWeekRange(trackingDate)} 開始 · 有打字會自動剔選並更新字數`,
-			);
-		}
 
 		const weekdayRow = container.createDiv({ cls: 'dwt-weekdays' });
 		for (const label of WEEKDAY_LABELS) {
@@ -186,19 +176,13 @@ export class DailyTrackerView extends ItemView {
 			rows.push({ dateKey, words: record.wordCount });
 		}
 
-		scoreboardEl.createEl('h3', { text: '累積 Scoreboard' });
+		scoreboardEl.createEl('h3', { text: 'Scoreboard' });
 		scoreboardEl.createDiv({
 			cls: 'dwt-score-summary',
-			text: `已寫 ${tickedDays} 天 · 累積 ${this.formatCount(cumulative)} 字`,
+			text: `${this.formatCount(cumulative)} 字 · ${tickedDays} 天`,
 		});
 
-		if (rows.length === 0) {
-			scoreboardEl.createDiv({
-				cls: 'dwt-score-empty',
-				text: '開始寫字後會自動剔選，並由追蹤當週起累積計算字數。',
-			});
-			return;
-		}
+		if (rows.length === 0) return;
 
 		const table = scoreboardEl.createEl('table', { cls: 'dwt-score-table' });
 		const thead = table.createEl('thead');

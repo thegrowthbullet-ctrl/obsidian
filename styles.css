@@ -66,13 +66,6 @@
 	box-shadow: 0 0 0 1px var(--color-accent);
 }
 
-.dwt-tracking-note {
-	font-size: 0.8em;
-	color: var(--text-muted);
-	margin-bottom: 10px;
-	line-height: 1.4;
-}
-
 .dwt-cell {
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 6px;
