@@ -1,9 +1,9 @@
 {
 	"id": "my-obsidian-plugin",
-	"name": "My Obsidian Plugin",
-	"version": "0.1.0",
+	"name": "Daily Word Tracker",
+	"version": "0.2.0",
 	"minAppVersion": "1.0.0",
-	"description": "你的第一個 Obsidian 插件 — 從這裡開始改寫。",
+	"description": "每日一格剔選追蹤寫作字數，含累積 scoreboard 與資料夾 include/exclude。",
 	"author": "Silver",
 	"isDesktopOnly": false
 }
