@@ -1,0 +1,20 @@
+# Offline install (no git required)
+
+Copy this entire `offline-bundle` folder to:
+
+`~/obsidian-plugins/my-obsidian-plugin`
+
+Required files:
+- manifest.json
+- main.js
+- styles.css
+- versions.json (optional)
+
+Then symlink into vaults:
+
+```bash
+ln -sf ~/obsidian-plugins/my-obsidian-plugin \
+  "/path/to/vault/.obsidian/plugins/my-obsidian-plugin"
+```
+
+No `npm` needed for runtime — only these files.
