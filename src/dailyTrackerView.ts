@@ -37,6 +37,7 @@ export class DailyTrackerView extends ItemView {
 	}
 
 	async onOpen(): Promise<void> {
+		this.containerEl.addClass('dwt-view-host');
 		this.plugin.ensureTrackingStarted();
 		await this.render();
 	}
