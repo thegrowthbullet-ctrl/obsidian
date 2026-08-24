@@ -160,9 +160,10 @@ export class DailyTrackerView extends ItemView {
 
 	buildScoreboard(scoreboardEl: HTMLElement, trackingStart: Date): void {
 		const today = new Date();
-		let cumulative = 0;
 		let tickedDays = 0;
-		const rows: { dateKey: string; words: number }[] = [];
+		const rows: { dateKey: string; words: number; cumulative: number }[] =
+			[];
+		let runningTotal = 0;
 
 		for (
 			let cursor = new Date(trackingStart);
@@ -174,9 +175,17 @@ export class DailyTrackerView extends ItemView {
 			if (!record.ticked) continue;
 
 			tickedDays += 1;
-			cumulative += record.wordCount;
-			rows.push({ dateKey, words: record.wordCount });
+			runningTotal += record.wordCount;
+			rows.push({
+				dateKey,
+				words: record.wordCount,
+				cumulative: runningTotal,
+			});
 		}
+
+		const cumulative = runningTotal;
+
+		rows.sort((a, b) => b.dateKey.localeCompare(a.dateKey));
 
 		scoreboardEl.createEl('h3', { text: 'Scoreboard' });
 		scoreboardEl.createDiv({
@@ -186,7 +195,8 @@ export class DailyTrackerView extends ItemView {
 
 		if (rows.length === 0) return;
 
-		const table = scoreboardEl.createEl('table', { cls: 'dwt-score-table' });
+		const tableWrap = scoreboardEl.createDiv({ cls: 'dwt-score-table-wrap' });
+		const table = tableWrap.createEl('table', { cls: 'dwt-score-table' });
 		const thead = table.createEl('thead');
 		const headRow = thead.createEl('tr');
 		headRow.createEl('th', { text: '日期' });
@@ -194,13 +204,11 @@ export class DailyTrackerView extends ItemView {
 		headRow.createEl('th', { text: '累積字數' });
 
 		const tbody = table.createEl('tbody');
-		let running = 0;
 		for (const row of rows) {
-			running += row.words;
 			const tr = tbody.createEl('tr');
 			tr.createEl('td', { text: row.dateKey });
 			tr.createEl('td', { text: this.formatCount(row.words) });
-			tr.createEl('td', { text: this.formatCount(running) });
+			tr.createEl('td', { text: this.formatCount(row.cumulative) });
 		}
 	}
 

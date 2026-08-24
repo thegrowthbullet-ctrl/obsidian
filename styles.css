@@ -186,6 +186,15 @@
 	margin-bottom: 12px;
 }
 
+.dwt-score-table-wrap {
+	max-height: min(180px, 35vh);
+	overflow-y: auto;
+	overflow-x: hidden;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	-webkit-overflow-scrolling: touch;
+}
+
 .dwt-score-empty {
 	font-size: 0.85em;
 	color: var(--text-muted);
@@ -210,6 +219,11 @@
 .dwt-score-table th {
 	color: var(--text-muted);
 	font-weight: 600;
+	position: sticky;
+	top: 0;
+	background: var(--background-primary);
+	z-index: 1;
+	box-shadow: 0 1px 0 var(--background-modifier-border);
 }
 
 .dwt-score-table td:last-child,
