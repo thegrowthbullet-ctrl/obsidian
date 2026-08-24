@@ -238,6 +238,11 @@
 	white-space: nowrap;
 }
 
+.dwt-score-table td:nth-child(2),
+.dwt-score-table th:nth-child(2) {
+	text-align: right;
+}
+
 /* Narrow side panels */
 @container dwt-calendar (max-width: 280px) {
 	.dwt-cell {
