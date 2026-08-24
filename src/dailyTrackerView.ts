@@ -3,6 +3,7 @@ import MyPlugin from './main';
 import {
 	addDays,
 	formatDateKey,
+	formatDateKeyShort,
 	formatWeekRange,
 	isBeforeDay,
 	startOfWeek,
@@ -206,7 +207,7 @@ export class DailyTrackerView extends ItemView {
 		const tbody = table.createEl('tbody');
 		for (const row of rows) {
 			const tr = tbody.createEl('tr');
-			tr.createEl('td', { text: row.dateKey });
+			tr.createEl('td', { text: formatDateKeyShort(row.dateKey) });
 			tr.createEl('td', { text: this.formatCount(row.words) });
 			tr.createEl('td', { text: this.formatCount(row.cumulative) });
 		}

@@ -57,11 +57,21 @@ export function isAfterDay(a: Date, b: Date): boolean {
 	return startOfDay(a) > startOfDay(b);
 }
 
+export function formatDateShort(date: Date): string {
+	return `${date.getMonth() + 1}/${date.getDate()}`;
+}
+
+export function formatDateKeyShort(dateKey: string): string {
+	const parsed = parseDateKey(dateKey);
+	if (!parsed) return dateKey;
+	return formatDateShort(parsed);
+}
+
 export function formatWeekRange(weekStart: Date): string {
 	const weekEnd = addDays(weekStart, 6);
-	const sameMonth = weekStart.getMonth() === weekEnd.getMonth();
-	if (sameMonth) {
-		return `${weekStart.getFullYear()} 年 ${weekStart.getMonth() + 1} 月 ${weekStart.getDate()}–${weekEnd.getDate()} 日`;
+	const y = weekStart.getFullYear();
+	if (weekStart.getMonth() === weekEnd.getMonth()) {
+		return `${y}/${weekStart.getMonth() + 1}/${weekStart.getDate()} - ${weekEnd.getDate()}`;
 	}
-	return `${weekStart.getFullYear()} 年 ${weekStart.getMonth() + 1}/${weekStart.getDate()} – ${weekEnd.getMonth() + 1}/${weekEnd.getDate()}`;
+	return `${y}/${weekStart.getMonth() + 1}/${weekStart.getDate()} - ${weekEnd.getMonth() + 1}/${weekEnd.getDate()}`;
 }

@@ -231,9 +231,11 @@
 	text-align: right;
 }
 
-.dwt-score-table td:nth-child(2),
-.dwt-score-table th:nth-child(2) {
-	text-align: right;
+.dwt-score-table th:first-child,
+.dwt-score-table td:first-child {
+	width: 28%;
+	min-width: 3.2em;
+	white-space: nowrap;
 }
 
 /* Narrow side panels */
