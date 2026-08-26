@@ -195,15 +195,19 @@
           </fieldset>
 
           <fieldset>
+            <legend>配偶 / 婚姻狀況加分（只能選一項）</legend>
+            <select name="partner-status" id="calc-partner-status">
+              <option value="">不適用（0 分）</option>
+              <option value="single">單身（+10 分）</option>
+              <option value="pr">配偶係澳洲公民或永居（+10 分）</option>
+              <option value="skills">配偶有技能評估 + Competent 英文（+10 分）</option>
+              <option value="english">配偶有 Competent 英文，例如 PTE / IELTS（+5 分）</option>
+            </select>
+            <p class="field-hint">配偶英文要求：PTE 各項 L47 / R48 / W51 / S54（2025年8月後），或 IELTS 各項 6.0。配偶技能分需未滿 45 歲、有職評，同你申請同一簽證。</p>
+          </fieldset>
+
+          <fieldset>
             <legend>其他加分項</legend>
-            <label class="checkbox-label">
-              <input type="checkbox" name="partner" id="calc-partner" />
-              配偶/伴侶符合技能要求（+10 分）
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" name="partner-english" id="calc-partner-english" />
-              單身或配偶有 Competent 英文（+10 分）
-            </label>
             <label class="checkbox-label">
               <input type="checkbox" name="naati" id="calc-naati" />
               NAATI 認可翻譯/口譯（+5 分）

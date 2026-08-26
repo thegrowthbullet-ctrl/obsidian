@@ -1,5 +1,12 @@
 import { STEPS, DOCUMENTS, STATES, STORAGE_KEY } from './data.js';
 
+const PARTNER_POINTS = {
+  single: { points: 10, label: '單身' },
+  pr: { points: 10, label: '配偶為澳洲公民/永居' },
+  skills: { points: 10, label: '配偶技能+英文' },
+  english: { points: 5, label: '配偶 Competent 英文' },
+};
+
 // ── State Management ──────────────────────────────────────────
 function loadState() {
   try {
@@ -205,6 +212,12 @@ function initCalculator() {
   const form = document.getElementById('calc-form');
   const saved = appState.calc || {};
 
+  // Migrate legacy partner checkbox state
+  if (!saved['partner-status']) {
+    if (saved.partner) saved['partner-status'] = 'skills';
+    else if (saved['partner-english']) saved['partner-status'] = 'english';
+  }
+
   // Restore saved values
   Object.entries(saved).forEach(([key, val]) => {
     const el = form.elements[key];
@@ -222,8 +235,12 @@ function initCalculator() {
 
     let bonus = 0;
     const bonuses = [];
-    if (form.elements.partner.checked) { bonus += 10; bonuses.push(['配偶技能', 10]); }
-    if (form.elements['partner-english'].checked) { bonus += 10; bonuses.push(['配偶英文/單身', 10]); }
+    const partnerKey = form.elements['partner-status'].value;
+    const partnerBonus = PARTNER_POINTS[partnerKey];
+    if (partnerBonus) {
+      bonus += partnerBonus.points;
+      bonuses.push([partnerBonus.label, partnerBonus.points]);
+    }
     if (form.elements.naati.checked) { bonus += 5; bonuses.push(['NAATI', 5]); }
     if (form.elements['regional-study'].checked) { bonus += 5; bonuses.push(['偏遠地區學習', 5]); }
     if (form.elements.stem.checked) { bonus += 10; bonuses.push(['STEM 學歷', 10]); }
