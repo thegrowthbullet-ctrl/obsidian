@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>澳洲 491 簽證申請指南 | 一步步完成移民</title>
+  <meta name="description" content="澳洲 Skilled Work Regional (Provisional) 491 簽證申請逐步指南，含進度追蹤、分數計算器及文件清單。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-flag" aria-hidden="true">🇦🇺</span>
+        <div>
+          <h1>491 簽證申請指南</h1>
+          <p class="brand-sub">Skilled Work Regional (Provisional) · 一步步完成澳洲移民</p>
+        </div>
+      </div>
+      <nav class="main-nav" aria-label="主要導航">
+        <button class="nav-btn active" data-section="dashboard">總覽</button>
+        <button class="nav-btn" data-section="steps">申請步驟</button>
+        <button class="nav-btn" data-section="calculator">分數計算</button>
+        <button class="nav-btn" data-section="documents">文件清單</button>
+        <button class="nav-btn" data-section="states">州份選擇</button>
+        <button class="nav-btn" data-section="pr-path">191 永居</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <!-- Dashboard -->
+    <section id="dashboard" class="section active">
+      <div class="hero">
+        <div class="hero-text">
+          <h2>你嘅 491 移民路線圖</h2>
+          <p>491 係澳洲「偏遠地區技術移民臨時簽證」，有效期 5 年。完成州政府提名或家庭擔保後，住滿 3 年可申請 <strong>191 永居簽證</strong>。</p>
+        </div>
+        <div class="progress-card">
+          <div class="progress-ring" id="progress-ring" aria-label="整體進度">
+            <svg viewBox="0 0 120 120">
+              <circle class="ring-bg" cx="60" cy="60" r="52" />
+              <circle class="ring-fill" cx="60" cy="60" r="52" id="ring-circle" />
+            </svg>
+            <div class="progress-label">
+              <span class="progress-percent" id="progress-percent">0%</span>
+              <span class="progress-caption">整體完成</span>
+            </div>
+          </div>
+          <div class="progress-stats">
+            <div class="stat">
+              <span class="stat-value" id="stat-completed">0</span>
+              <span class="stat-label">已完成步驟</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value" id="stat-total">12</span>
+              <span class="stat-label">總步驟</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value" id="stat-points">—</span>
+              <span class="stat-label">你嘅分數</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert alert-info">
+        <strong>⚠️ 重要提示：</strong>本網站僅供個人規劃參考，唔係法律或移民建議。申請前請以
+        <a href="https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/skilled-work-regional-provisional-491" target="_blank" rel="noopener">澳洲內政部官方網站</a>
+        最新資訊為準，或諮詢註冊移民代理（MARA）。
+      </div>
+
+      <div class="quick-facts">
+        <h3>491 簽證重點一覽</h3>
+        <div class="facts-grid">
+          <div class="fact-card">
+            <span class="fact-icon">📋</span>
+            <h4>最低分數</h4>
+            <p>EOI 至少 <strong>65 分</strong>（州提名 +15 分）</p>
+          </div>
+          <div class="fact-card">
+            <span class="fact-icon">🎂</span>
+            <h4>年齡限制</h4>
+            <p>邀請時未滿 <strong>45 歲</strong></p>
+          </div>
+          <div class="fact-card">
+            <span class="fact-icon">⏱️</span>
+            <h4>邀請後期限</h4>
+            <p>收到 ITA 後 <strong>60 日</strong>內遞交簽證</p>
+          </div>
+          <div class="fact-card">
+            <span class="fact-icon">💰</span>
+            <h4>簽證費用</h4>
+            <p>主申請人約 <strong>AUD $4,640</strong>（2026）</p>
+          </div>
+          <div class="fact-card">
+            <span class="fact-icon">🏠</span>
+            <h4>居住要求</h4>
+            <p>必須住喺指定偏遠地區</p>
+          </div>
+          <div class="fact-card">
+            <span class="fact-icon">🎯</span>
+            <h4>永居途徑</h4>
+            <p>3 年後申請 <strong>191 永居</strong></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-preview">
+        <h3>申請流程概覽</h3>
+        <ol class="timeline" id="timeline-preview"></ol>
+      </div>
+
+      <div class="next-action" id="next-action-card">
+        <h3>下一步行動</h3>
+        <p id="next-action-text">開始第一步：確認你嘅申請途徑</p>
+        <button class="btn btn-primary" id="go-next-step">前往該步驟 →</button>
+      </div>
+    </section>
+
+    <!-- Steps -->
+    <section id="steps" class="section">
+      <div class="section-header">
+        <h2>申請步驟詳解</h2>
+        <p>跟住做，逐項剔選完成。進度會自動儲存喺你嘅瀏覽器。</p>
+      </div>
+      <div class="steps-container" id="steps-container"></div>
+    </section>
+
+    <!-- Points Calculator -->
+    <section id="calculator" class="section">
+      <div class="section-header">
+        <h2>移民分數計算器</h2>
+        <p>EOI 最低需要 65 分。州提名可額外獲得 15 分。填寫你嘅資料，即時計算分數。</p>
+      </div>
+      <div class="calculator-layout">
+        <form class="calc-form" id="calc-form">
+          <fieldset>
+            <legend>年齡（邀請時）</legend>
+            <select name="age" id="calc-age">
+              <option value="0">請選擇</option>
+              <option value="25">18–24 歲（25 分）</option>
+              <option value="30">25–32 歲（30 分）</option>
+              <option value="25">33–39 歲（25 分）</option>
+              <option value="15">40–44 歲（15 分）</option>
+              <option value="-1">45 歲或以上（不符合）</option>
+            </select>
+          </fieldset>
+
+          <fieldset>
+            <legend>英文程度</legend>
+            <select name="english" id="calc-english">
+              <option value="0">請選擇</option>
+              <option value="0">Competent（IELTS 6.0 各項）— 0 分</option>
+              <option value="10">Proficient（IELTS 7.0 各項）— 10 分</option>
+              <option value="20">Superior（IELTS 8.0 各項）— 20 分</option>
+            </select>
+          </fieldset>
+
+          <fieldset>
+            <legend>海外工作經驗（提名職業相關）</legend>
+            <select name="overseas-work" id="calc-overseas">
+              <option value="0">少於 3 年（0 分）</option>
+              <option value="5">3–4 年（5 分）</option>
+              <option value="10">5–7 年（10 分）</option>
+              <option value="15">8 年以上（15 分）</option>
+            </select>
+          </fieldset>
+
+          <fieldset>
+            <legend>澳洲工作經驗（提名職業相關）</legend>
+            <select name="aus-work" id="calc-aus">
+              <option value="0">少於 1 年（0 分）</option>
+              <option value="5">1–2 年（5 分）</option>
+              <option value="10">3–4 年（10 分）</option>
+              <option value="15">5–7 年（15 分）</option>
+              <option value="20">8 年以上（20 分）</option>
+            </select>
+          </fieldset>
+
+          <fieldset>
+            <legend>學歷</legend>
+            <select name="education" id="calc-education">
+              <option value="0">請選擇</option>
+              <option value="10">澳洲學士或以上（10 分）</option>
+              <option value="15">澳洲博士（15 分）</option>
+              <option value="10">海外學士或以上（10 分）</option>
+              <option value="15">海外博士（15 分）</option>
+              <option value="5">澳洲專科文憑（5 分）</option>
+              <option value="5">澳洲貿易資格（5 分）</option>
+            </select>
+          </fieldset>
+
+          <fieldset>
+            <legend>其他加分項</legend>
+            <label class="checkbox-label">
+              <input type="checkbox" name="partner" id="calc-partner" />
+              配偶/伴侶符合技能要求（+10 分）
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="partner-english" id="calc-partner-english" />
+              單身或配偶有 Competent 英文（+10 分）
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="naati" id="calc-naati" />
+              NAATI 認可翻譯/口譯（+5 分）
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="regional-study" id="calc-regional" />
+              澳洲偏遠地區學習 2 年（+5 分）
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="stem" id="calc-stem" />
+              STEM 碩士/博士（澳洲）（+10 分）
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="professional-year" id="calc-py" />
+              完成 Professional Year（+5 分）
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="state-nomination" id="calc-state" checked />
+              州/領地提名（+15 分）
+            </label>
+          </fieldset>
+        </form>
+
+        <div class="calc-result" id="calc-result">
+          <div class="score-display">
+            <span class="score-number" id="score-number">0</span>
+            <span class="score-label">總分</span>
+          </div>
+          <div class="score-breakdown" id="score-breakdown"></div>
+          <div class="score-status" id="score-status"></div>
+          <p class="score-note">💡 實際邀請分數因州份、職業同每輪邀請而異，65 分只係最低門檻。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Documents -->
+    <section id="documents" class="section">
+      <div class="section-header">
+        <h2>文件準備清單</h2>
+        <p>建議提前準備，收到邀請後 60 日內要遞交完整申請。</p>
+      </div>
+      <div class="doc-categories" id="doc-categories"></div>
+    </section>
+
+    <!-- States -->
+    <section id="states" class="section">
+      <div class="section-header">
+        <h2>州份提名選擇</h2>
+        <p>491 需要州/領地提名或合資格親屬擔保。每個州要求唔同，要研究邊個最適合你。</p>
+      </div>
+      <div class="states-grid" id="states-grid"></div>
+      <div class="stream-comparison">
+        <h3>兩條申請途徑</h3>
+        <div class="stream-cards">
+          <div class="stream-card">
+            <h4>途徑 A：州政府提名</h4>
+            <ul>
+              <li>向目標州提交 ROI（Registration of Interest）</li>
+              <li>州政府審核後發出提名</li>
+              <li>最常見嘅申請方式</li>
+              <li>要承諾住喺該州偏遠地區</li>
+            </ul>
+          </div>
+          <div class="stream-card">
+            <h4>途徑 B：家庭擔保</h4>
+            <ul>
+              <li>需要合資格親屬（澳洲公民/PR）擔保</li>
+              <li>擔保人必須住喺指定偏遠地區</li>
+              <li>親屬關係：父母、子女、兄弟姊妹等</li>
+              <li>擔保人需填寫 Form 491FS</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PR Path -->
+    <section id="pr-path" class="section">
+      <div class="section-header">
+        <h2>491 → 191 永居路徑</h2>
+        <p>491 係臨時簽證（5 年），滿足條件後可申請 191 永久居留簽證。</p>
+      </div>
+      <div class="pr-requirements">
+        <div class="pr-card">
+          <h3>191 永居申請條件</h3>
+          <ul class="pr-list">
+            <li>持有 491 或 494 簽證至少 <strong>3 年</strong></li>
+            <li>3 年內住喺指定偏遠地區</li>
+            <li>3 個財政年度內，每年收入達最低門檻（2026 年約 <strong>AUD $53,900</strong>）</li>
+            <li>符合健康及品格要求</li>
+            <li>191 申請費約 AUD $475</li>
+          </ul>
+        </div>
+        <div class="pr-card">
+          <h3>偏遠地區包括</h3>
+          <p>除悉尼、墨爾本、布里斯班大都市區外，澳洲大部分地區都屬偏遠地區，包括：</p>
+          <ul class="pr-list">
+            <li>南澳、塔斯曼尼亞、北領地（全州）</li>
+            <li>西澳珀斯以外地區</li>
+            <li>維州墨爾本以外地區</li>
+            <li>新州悉尼以外地區</li>
+            <li>昆士蘭黃金海岸、布里斯班以外地區</li>
+          </ul>
+        </div>
+      </div>
+      <div class="pr-timeline">
+        <h3>時間線規劃</h3>
+        <div class="pr-steps">
+          <div class="pr-step"><span class="pr-year">第 0 年</span><p>491 簽證獲批，搬去偏遠地區</p></div>
+          <div class="pr-step"><span class="pr-year">第 1–3 年</span><p>在偏遠地區居住、工作，累積收入記錄</p></div>
+          <div class="pr-step"><span class="pr-year">第 3 年</span><p>符合條件後申請 191 永居</p></div>
+          <div class="pr-step"><span class="pr-year">永居後</span><p>可自由搬去任何城市，包括悉尼、墨爾本</p></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>本工具僅供個人規劃參考 · 資料來源：<a href="https://immi.homeaffairs.gov.au" target="_blank" rel="noopener">澳洲內政部</a></p>
+    <button class="btn btn-ghost btn-sm" id="reset-progress">重設所有進度</button>
+  </footer>
+
+  <script type="module" src="js/data.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
