@@ -789,6 +789,55 @@ a:hover { color: var(--color-primary-dark); }
 
 .pr-step p { font-size: 0.82rem; color: var(--color-text-muted); }
 
+/* Sync card */
+.sync-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.sync-card h3 {
+  font-size: 1.05rem;
+  margin-bottom: 0.5rem;
+}
+
+.sync-card > p {
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+  margin-bottom: 1rem;
+}
+
+.sync-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.sync-card .btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.sync-card .btn-primary:hover {
+  background: var(--color-primary-dark);
+}
+
+.sync-meta {
+  margin-top: 0.75rem;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
 /* Footer */
 .site-footer {
   text-align: center;

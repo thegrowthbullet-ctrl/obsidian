@@ -19,6 +19,80 @@ function loadState() {
 
 function saveState(state) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  updateSyncMeta();
+}
+
+function updateSyncMeta() {
+  const meta = document.getElementById('sync-meta');
+  if (!meta) return;
+  const updatedAt = appState.updatedAt;
+  meta.textContent = updatedAt
+    ? `上次更新：${new Date(updatedAt).toLocaleString('zh-HK')}`
+    : '尚未匯出或同步進度';
+}
+
+function exportProgress() {
+  const payload = {
+    ...appState,
+    updatedAt: new Date().toISOString(),
+    exportedFrom: 'visa-491-tracker',
+  };
+  appState.updatedAt = payload.updatedAt;
+  saveState(appState);
+
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10);
+  link.href = url;
+  link.download = `491-visa-progress-${date}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function importProgress(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (!data || typeof data !== 'object') throw new Error('invalid');
+      appState = {
+        steps: data.steps || {},
+        docs: data.docs || {},
+        notes: data.notes || {},
+        calc: data.calc || {},
+        updatedAt: data.updatedAt || new Date().toISOString(),
+      };
+      saveState(appState);
+      renderSteps();
+      renderDocuments();
+      updateDashboard();
+      initCalculator();
+      alert('進度已成功匯入！');
+    } catch {
+      alert('匯入失敗，請確認檔案係由本網站匯出嘅 JSON。');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function setupSyncControls() {
+  const fileInput = document.getElementById('import-file');
+  const triggerImport = () => fileInput.click();
+
+  ['export-progress', 'export-progress-footer'].forEach(id => {
+    document.getElementById(id)?.addEventListener('click', exportProgress);
+  });
+
+  ['import-progress', 'import-progress-footer'].forEach(id => {
+    document.getElementById(id)?.addEventListener('click', triggerImport);
+  });
+
+  fileInput?.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    if (file) importProgress(file);
+    fileInput.value = '';
+  });
 }
 
 let appState = loadState();
@@ -311,6 +385,8 @@ document.getElementById('reset-progress').addEventListener('click', () => {
 });
 
 // ── Init ────────────────────────────────────────────────────────
+setupSyncControls();
+updateSyncMeta();
 renderSteps();
 renderDocuments();
 renderStates();
