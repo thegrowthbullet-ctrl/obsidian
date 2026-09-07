@@ -1,4 +1,4 @@
-import { App, MarkdownView } from 'obsidian';
+import { App, MarkdownView, TFile } from 'obsidian';
 import { matchesFolderFilter } from './folderFilter';
 import {
 	endOfDay,
@@ -29,6 +29,88 @@ export function countWords(text: string): number {
 	return cjk + english;
 }
 
+/** Sum positive word-count deltas vs a per-file baseline snapshot. */
+export function countDeltaWords(
+	currentByPath: Record<string, number>,
+	baselineByPath: Record<string, number>,
+): number {
+	let total = 0;
+
+	for (const [path, current] of Object.entries(currentByPath)) {
+		const baseline = baselineByPath[path] ?? 0;
+		total += Math.max(0, current - baseline);
+	}
+
+	return total;
+}
+
+function getScopedMarkdownFiles(
+	app: App,
+	includeFolders: string[],
+	excludeFolders: string[],
+): TFile[] {
+	return app.vault.getMarkdownFiles().filter((file) =>
+		matchesFolderFilter(file.path, includeFolders, excludeFolders),
+	);
+}
+
+export async function buildWordCountSnapshot(
+	app: App,
+	includeFolders: string[],
+	excludeFolders: string[],
+): Promise<Record<string, number>> {
+	const snapshot: Record<string, number> = {};
+
+	for (const file of getScopedMarkdownFiles(
+		app,
+		includeFolders,
+		excludeFolders,
+	)) {
+		const content = await app.vault.cachedRead(file);
+		snapshot[file.path] = countWords(content);
+	}
+
+	return snapshot;
+}
+
+export async function buildCurrentWordCounts(
+	app: App,
+	includeFolders: string[],
+	excludeFolders: string[],
+): Promise<Record<string, number>> {
+	const counts: Record<string, number> = {};
+	const activeFile = app.workspace.getActiveFile();
+	const view = app.workspace.getActiveViewOfType(MarkdownView);
+
+	for (const file of getScopedMarkdownFiles(
+		app,
+		includeFolders,
+		excludeFolders,
+	)) {
+		if (activeFile?.path === file.path && view?.file === file) {
+			counts[file.path] = countWords(view.editor.getValue());
+			continue;
+		}
+
+		const content = await app.vault.cachedRead(file);
+		counts[file.path] = countWords(content);
+	}
+
+	return counts;
+}
+
+/** Words added today = current counts minus the snapshot taken at day start. */
+export async function countWordsWrittenToday(
+	app: App,
+	includeFolders: string[],
+	excludeFolders: string[],
+	dayStartSnapshot: Record<string, number>,
+): Promise<number> {
+	const current = await buildCurrentWordCounts(app, includeFolders, excludeFolders);
+	return countDeltaWords(current, dayStartSnapshot);
+}
+
+/** Legacy: total words in files modified on a given day (not recommended). */
 export async function countWordsForDay(
 	app: App,
 	date: Date,
@@ -39,11 +121,11 @@ export async function countWordsForDay(
 	const dayEnd = endOfDay(date);
 	let total = 0;
 
-	for (const file of app.vault.getMarkdownFiles()) {
-		if (!matchesFolderFilter(file.path, includeFolders, excludeFolders)) {
-			continue;
-		}
-
+	for (const file of getScopedMarkdownFiles(
+		app,
+		includeFolders,
+		excludeFolders,
+	)) {
 		const stat = await app.vault.adapter.stat(file.path);
 		if (!stat) continue;
 
@@ -55,39 +137,6 @@ export async function countWordsForDay(
 	}
 
 	return total;
-}
-
-/** Count today's words, using live editor content when the active note is open. */
-export async function countWordsForTodayLive(
-	app: App,
-	includeFolders: string[],
-	excludeFolders: string[],
-): Promise<number> {
-	const today = new Date();
-	const dayStart = startOfDay(today);
-	const dayEnd = endOfDay(today);
-	let total = await countWordsForDay(app, today, includeFolders, excludeFolders);
-
-	const activeFile = app.workspace.getActiveFile();
-	if (!activeFile?.path.endsWith('.md')) return total;
-	if (!matchesFolderFilter(activeFile.path, includeFolders, excludeFolders)) {
-		return total;
-	}
-
-	const view = app.workspace.getActiveViewOfType(MarkdownView);
-	if (!view || view.file !== activeFile) return total;
-
-	const liveWords = countWords(view.editor.getValue());
-	const stat = await app.vault.adapter.stat(activeFile.path);
-	const alreadyCountedToday =
-		stat && stat.mtime >= dayStart && stat.mtime <= dayEnd;
-
-	if (alreadyCountedToday) {
-		const savedContent = await app.vault.cachedRead(activeFile);
-		total -= countWords(savedContent);
-	}
-
-	return total + liveWords;
 }
 
 export { formatDateKey } from './dateUtils';

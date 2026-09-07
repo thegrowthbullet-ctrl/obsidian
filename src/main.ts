@@ -15,21 +15,29 @@ import {
 	MyPluginSettings,
 	SampleSettingTab,
 } from './settings';
-import { countWordsForDay, countWordsForTodayLive } from './wordCount';
+import {
+	buildWordCountSnapshot,
+	countWordsWrittenToday,
+} from './wordCount';
 
 export interface DayRecord {
 	ticked: boolean;
 	wordCount: number;
 }
 
+/** Per-file word counts captured at the start of each calendar day. */
+export type DayStartSnapshots = Record<string, Record<string, number>>;
+
 interface PluginPersistedData {
 	settings?: Partial<MyPluginSettings>;
 	dayRecords?: Record<string, DayRecord>;
+	dayStartSnapshots?: DayStartSnapshots;
 }
 
 export default class MyPlugin extends Plugin {
 	settings!: MyPluginSettings;
 	dayRecords: Record<string, DayRecord> = {};
+	dayStartSnapshots: DayStartSnapshots = {};
 	private updateDebounce: ReturnType<typeof setTimeout> | null = null;
 	private isUpdatingToday = false;
 
@@ -149,6 +157,31 @@ export default class MyPlugin extends Plugin {
 		}, 400);
 	}
 
+	async ensureDayStartSnapshot(dateKey: string): Promise<Record<string, number>> {
+		const existing = this.dayStartSnapshots[dateKey];
+		if (existing) return existing;
+
+		const include = parseFolderList(this.settings.includeFolders);
+		const exclude = parseFolderList(this.settings.excludeFolders);
+		const snapshot = await buildWordCountSnapshot(
+			this.app,
+			include,
+			exclude,
+		);
+
+		this.dayStartSnapshots[dateKey] = snapshot;
+		await this.saveAllData();
+		return snapshot;
+	}
+
+	async resetTodaySnapshot(): Promise<void> {
+		const dateKey = formatDateKey(new Date());
+		delete this.dayStartSnapshots[dateKey];
+		await this.ensureDayStartSnapshot(dateKey);
+		await this.updateTodayRecord();
+		this.refreshTrackerViews();
+	}
+
 	async updateTodayRecord(): Promise<void> {
 		if (this.isUpdatingToday) return;
 		this.isUpdatingToday = true;
@@ -160,10 +193,12 @@ export default class MyPlugin extends Plugin {
 			const dateKey = formatDateKey(today);
 			const include = parseFolderList(this.settings.includeFolders);
 			const exclude = parseFolderList(this.settings.excludeFolders);
-			const words = await countWordsForTodayLive(
+			const snapshot = await this.ensureDayStartSnapshot(dateKey);
+			const words = await countWordsWrittenToday(
 				this.app,
 				include,
 				exclude,
+				snapshot,
 			);
 
 			const record = this.getDayRecord(dateKey);
@@ -186,8 +221,13 @@ export default class MyPlugin extends Plugin {
 		const todayKey = formatDateKey(new Date());
 		const words =
 			dateKey === todayKey
-				? await countWordsForTodayLive(this.app, include, exclude)
-				: await countWordsForDay(this.app, date, include, exclude);
+				? await countWordsWrittenToday(
+						this.app,
+						include,
+						exclude,
+						await this.ensureDayStartSnapshot(dateKey),
+					)
+				: this.getDayRecord(dateKey).wordCount;
 
 		const ticked = words > 0;
 		await this.setDayRecord(dateKey, { ticked, wordCount: words });
@@ -199,6 +239,8 @@ export default class MyPlugin extends Plugin {
 		const trackingStart = this.getTrackingWeekStart();
 		const today = new Date();
 
+		const todayKey = formatDateKey(today);
+
 		for (
 			let cursor = new Date(trackingStart);
 			cursor.getTime() <= today.getTime();
@@ -206,18 +248,18 @@ export default class MyPlugin extends Plugin {
 		) {
 			const dateKey = formatDateKey(cursor);
 			const record = this.getDayRecord(dateKey);
-			const words =
-				dateKey === formatDateKey(today)
-					? await countWordsForTodayLive(this.app, include, exclude)
-					: await countWordsForDay(
-							this.app,
-							cursor,
-							include,
-							exclude,
-						);
 
-			record.ticked = words > 0;
-			record.wordCount = words;
+			if (dateKey === todayKey) {
+				const snapshot = await this.ensureDayStartSnapshot(dateKey);
+				record.wordCount = await countWordsWrittenToday(
+					this.app,
+					include,
+					exclude,
+					snapshot,
+				);
+			}
+
+			record.ticked = record.wordCount > 0;
 			this.dayRecords[dateKey] = record;
 		}
 
@@ -241,6 +283,7 @@ export default class MyPlugin extends Plugin {
 		if (!data) {
 			this.settings = Object.assign({}, DEFAULT_SETTINGS);
 			this.dayRecords = {};
+			this.dayStartSnapshots = {};
 			return;
 		}
 
@@ -253,6 +296,7 @@ export default class MyPlugin extends Plugin {
 		}
 
 		this.dayRecords = data.dayRecords ?? {};
+		this.dayStartSnapshots = data.dayStartSnapshots ?? {};
 	}
 
 	async saveSettings() {
@@ -263,6 +307,7 @@ export default class MyPlugin extends Plugin {
 		await this.saveData({
 			settings: this.settings,
 			dayRecords: this.dayRecords,
+			dayStartSnapshots: this.dayStartSnapshots,
 		});
 	}
 }
